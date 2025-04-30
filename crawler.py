@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 import time
 import random
+import pandas as pd
 
 def random_sleep(a=1, b=3):
     time.sleep(random.uniform(a, b))
@@ -11,6 +12,7 @@ def slow_type(page, selector, text, delay=0.1):
         time.sleep(delay)
 
 try:
+    job_titles = []
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, slow_mo=50)
         page = browser.new_page()
@@ -22,9 +24,9 @@ try:
         random_sleep(1, 3)
         page.wait_for_selector('#email', state='visible')
         random_sleep(1, 4)
-        slow_type(page, '#email', '', delay=0.15)
+        slow_type(page, '#email', 'kalabiq1@gmail.com', delay=0.15)
         random_sleep(2, 4)
-        slow_type(page, '#password', '', delay=0.2)
+        slow_type(page, '#password', 'A55975597a!', delay=0.2)
         random_sleep(1, 5)
         page.mouse.wheel(0, 300)
         random_sleep(2, 4)
@@ -46,6 +48,7 @@ try:
             links = page.query_selector_all('div.flex.gap-4 h2 a')
             for link in links:
                 text = link.inner_text().strip()
+                job_titles.append(text)
                 print(text)
             try:
                 next_button = page.query_selector('a.flex-auto.lg\\:inline-block.px-3.leading-10.border.border-solid.border-adzuna-green-500.text-adzuna-green-500.rounded-lg.hover\\:text-white.hover\\:bg-adzuna-green-500.md\\:ml-1')
@@ -58,6 +61,10 @@ try:
             except Exception as e:
                 print("Error")
                 break
+
+        df = pd.DataFrame(job_titles, columns=["Job title"])
+        df.to_excel('Resutls.xlsx', index=False)
+        print("Done!")
 
         time.sleep(10)
 finally:
