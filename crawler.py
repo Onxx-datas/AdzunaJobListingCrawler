@@ -40,12 +40,24 @@ try:
         random_sleep(1, 2)
         page.click('button[type="submit"]')
         random_sleep(3, 5)
-        page.wait_for_selector('div.flex.gap-4 h2 a')
-        links = page.query_selector_all('div.flex.gap-4 h2 a')
-        for link in links:
-            text = link.inner_text().strip()
-            print(text)
-        
+
+        while True:
+            page.wait_for_selector('div.flex.gap-4 h2 a')
+            links = page.query_selector_all('div.flex.gap-4 h2 a')
+            for link in links:
+                text = link.inner_text().strip()
+                print(text)
+            try:
+                next_button = page.query_selector('a.flex-auto.lg\\:inline-block.px-3.leading-10.border.border-solid.border-adzuna-green-500.text-adzuna-green-500.rounded-lg.hover\\:text-white.hover\\:bg-adzuna-green-500.md\\:ml-1')
+                if next_button:
+                    next_button.click()
+                    random_sleep(2, 4)
+                else:
+                    print("No more pages")
+                    break
+            except Exception as e:
+                print("Error")
+                break
 
         time.sleep(10)
 finally:
