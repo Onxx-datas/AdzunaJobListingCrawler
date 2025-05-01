@@ -6,8 +6,17 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 import os
 
+
+
+
+
+
 def random_sleep(a=1, b=3):
     time.sleep(random.uniform(a, b))
+
+
+
+
 
 def slow_type(page, selector, text, delay=0.1):
     page.click(selector)
@@ -15,29 +24,32 @@ def slow_type(page, selector, text, delay=0.1):
         page.keyboard.type(char)
         time.sleep(delay)
 
+
+
+
+
+
 def style_excel(input_file, output_file):
     # Make sure the file exists
     if not os.path.exists(input_file):
-        print("❌ Results.xlsx not found.")
+        print("Results.xlsx not found.")
         return
-
-    # Load workbook and sheet
     wb = load_workbook(input_file)
     ws = wb.active
-
-    # Style header
     header = ws[1]
     for cell in header:
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill(start_color="4CAF50", end_color="4CAF50", fill_type="solid")
         cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    # Style data rows
     for row in ws.iter_rows(min_row=2):
         for cell in row:
             cell.alignment = Alignment(horizontal="left", vertical="center")
 
-    # Adjust column width (optional)
+
+
+
+
+
     for col in ws.columns:
         max_length = 0
         column = col[0].column_letter
@@ -49,13 +61,19 @@ def style_excel(input_file, output_file):
                 pass
         adjusted_width = max_length + 4
         ws.column_dimensions[column].width = adjusted_width
-
-    # Save the styled file
     wb.save(output_file)
-    print(f"✅ {output_file} created successfully!")
+    print(f"{output_file} created successfully!")
 
-# Scraping and styling logic combined into one script
+
+
+
+
+
 job_titles = []
+
+
+
+
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False, slow_mo=50)
@@ -87,6 +105,9 @@ with sync_playwright() as p:
     page.click('button[type="submit"]')
     random_sleep(3, 5)
 
+
+
+
     while True:
         page.wait_for_selector('div.flex.gap-4 h2 a')
         links = page.query_selector_all('div.flex.gap-4 h2 a')
@@ -106,13 +127,11 @@ with sync_playwright() as p:
             print("Error")
             break
 
-    # Save the scraped data into Excel file
+
+
     df = pd.DataFrame(job_titles, columns=["Job title"])
-    df.to_excel('Results.xlsx', index=False)
-    print("✅ Scraped data saved to Results.xlsx!")
+    df.to_excel('Styled_Results.xlsx', index=False)
+    style_excel('Styled_Results.xlsx', 'Styled_Results.xlsx')
+    print("Scraped data saved to Styled_Results.xlsx!")
 
-# After scraping, apply styling to the Excel file
-style_excel('Results.xlsx', 'Styled_Results.xlsx')
-
-# Clean up
 browser.close()
