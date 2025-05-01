@@ -2,70 +2,117 @@ from playwright.sync_api import sync_playwright
 import time
 import random
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+import os
 
 def random_sleep(a=1, b=3):
     time.sleep(random.uniform(a, b))
+
 def slow_type(page, selector, text, delay=0.1):
     page.click(selector)
     for char in text:
         page.keyboard.type(char)
         time.sleep(delay)
 
-try:
-    job_titles = []
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=50)
-        page = browser.new_page()
-        page.goto('https://www.adzuna.com/')
-        random_sleep(2, 4)
-        page.wait_for_selector('header nav ul li:first-child a', state="visible")
-        page.click('header nav ul li:first-child a')
-        page.wait_for_load_state('domcontentloaded')
-        random_sleep(1, 3)
-        page.wait_for_selector('#email', state='visible')
-        random_sleep(1, 4)
-        slow_type(page, '#email', 'kalabiq1@gmail.com', delay=0.15)
-        random_sleep(2, 4)
-        slow_type(page, '#password', 'A55975597a!', delay=0.2)
-        random_sleep(1, 5)
-        page.mouse.wheel(0, 300)
-        random_sleep(2, 4)
-        button = page.query_selector('form button[type="submit"]')
-        box = button.bounding_box()
-        page.mouse.move(box['x'] + box['width']/2, box['y'] + box['height']/2, steps=25)
-        random_sleep(1, 2)
-        page.get_by_role('button', name='Login').click()
-        page.wait_for_load_state('domcontentloaded')
-        random_sleep(3, 6)
-        page.wait_for_selector('#what', state='visible')
-        slow_type(page, '#what', 'Logistics', delay=0.3)
-        random_sleep(1, 2)
-        page.click('button[type="submit"]')
-        random_sleep(3, 5)
+def style_excel(input_file, output_file):
+    # Make sure the file exists
+    if not os.path.exists(input_file):
+        print("❌ Results.xlsx not found.")
+        return
 
-        while True:
-            page.wait_for_selector('div.flex.gap-4 h2 a')
-            links = page.query_selector_all('div.flex.gap-4 h2 a')
-            for link in links:
-                text = link.inner_text().strip()
-                job_titles.append(text)
-                print(text)
+    # Load workbook and sheet
+    wb = load_workbook(input_file)
+    ws = wb.active
+
+    # Style header
+    header = ws[1]
+    for cell in header:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill(start_color="4CAF50", end_color="4CAF50", fill_type="solid")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # Style data rows
+    for row in ws.iter_rows(min_row=2):
+        for cell in row:
+            cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    # Adjust column width (optional)
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
             try:
-                next_button = page.query_selector('a.flex-auto.lg\\:inline-block.px-3.leading-10.border.border-solid.border-adzuna-green-500.text-adzuna-green-500.rounded-lg.hover\\:text-white.hover\\:bg-adzuna-green-500.md\\:ml-1')
-                if next_button:
-                    next_button.click()
-                    random_sleep(2, 4)
-                else:
-                    print("No more pages")
-                    break
-            except Exception as e:
-                print("Error")
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        adjusted_width = max_length + 4
+        ws.column_dimensions[column].width = adjusted_width
+
+    # Save the styled file
+    wb.save(output_file)
+    print(f"✅ {output_file} created successfully!")
+
+# Scraping and styling logic combined into one script
+job_titles = []
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=False, slow_mo=50)
+    page = browser.new_page()
+    page.goto('https://www.adzuna.com/')
+    random_sleep(2, 4)
+    page.wait_for_selector('header nav ul li:first-child a', state="visible")
+    page.click('header nav ul li:first-child a')
+    page.wait_for_load_state('domcontentloaded')
+    random_sleep(1, 3)
+    page.wait_for_selector('#email', state='visible')
+    random_sleep(1, 4)
+    slow_type(page, '#email', 'kalabiq1@gmail.com', delay=0.15)
+    random_sleep(2, 4)
+    slow_type(page, '#password', 'A55975597a!', delay=0.2)
+    random_sleep(1, 5)
+    page.mouse.wheel(0, 300)
+    random_sleep(2, 4)
+    button = page.query_selector('form button[type="submit"]')
+    box = button.bounding_box()
+    page.mouse.move(box['x'] + box['width']/2, box['y'] + box['height']/2, steps=25)
+    random_sleep(1, 2)
+    page.get_by_role('button', name='Login').click()
+    page.wait_for_load_state('domcontentloaded')
+    random_sleep(3, 6)
+    page.wait_for_selector('#what', state='visible')
+    slow_type(page, '#what', 'Logistics', delay=0.3)
+    random_sleep(1, 2)
+    page.click('button[type="submit"]')
+    random_sleep(3, 5)
+
+    while True:
+        page.wait_for_selector('div.flex.gap-4 h2 a')
+        links = page.query_selector_all('div.flex.gap-4 h2 a')
+        for link in links:
+            text = link.inner_text().strip()
+            job_titles.append(text)
+            print(text)
+        try:
+            next_button = page.query_selector('a.flex-auto.lg\\:inline-block.px-3.leading-10.border.border-solid.border-adzuna-green-500.text-adzuna-green-500.rounded-lg.hover\\:text-white.hover\\:bg-adzuna-green-500.md\\:ml-1')
+            if next_button:
+                next_button.click()
+                random_sleep(2, 4)
+            else:
+                print("No more pages")
                 break
+        except Exception as e:
+            print("Error")
+            break
 
-        df = pd.DataFrame(job_titles, columns=["Job title"])
-        df.to_excel('Resutls.xlsx', index=False)
-        print("Done!")
+    # Save the scraped data into Excel file
+    df = pd.DataFrame(job_titles, columns=["Job title"])
+    df.to_excel('Results.xlsx', index=False)
+    print("✅ Scraped data saved to Results.xlsx!")
 
-        time.sleep(10)
-finally:
-    browser.close()
+# After scraping, apply styling to the Excel file
+style_excel('Results.xlsx', 'Styled_Results.xlsx')
+
+# Clean up
+browser.close()
