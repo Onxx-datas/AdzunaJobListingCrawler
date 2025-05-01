@@ -6,28 +6,14 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 import os
 
-
-
-
-
-
 def random_sleep(a=1, b=3):
     time.sleep(random.uniform(a, b))
-
-
-
-
 
 def slow_type(page, selector, text, delay=0.1):
     page.click(selector)
     for char in text:
         page.keyboard.type(char)
         time.sleep(delay)
-
-
-
-
-
 
 def style_excel(input_file, output_file):
     # Make sure the file exists
@@ -45,11 +31,6 @@ def style_excel(input_file, output_file):
         for cell in row:
             cell.alignment = Alignment(horizontal="left", vertical="center")
 
-
-
-
-
-
     for col in ws.columns:
         max_length = 0
         column = col[0].column_letter
@@ -64,16 +45,7 @@ def style_excel(input_file, output_file):
     wb.save(output_file)
     print(f"{output_file} created successfully!")
 
-
-
-
-
-
 job_titles = []
-
-
-
-
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False, slow_mo=50)
@@ -105,9 +77,6 @@ with sync_playwright() as p:
     page.click('button[type="submit"]')
     random_sleep(3, 5)
 
-
-
-
     while True:
         page.wait_for_selector('div.flex.gap-4 h2 a')
         links = page.query_selector_all('div.flex.gap-4 h2 a')
@@ -127,11 +96,24 @@ with sync_playwright() as p:
             print("Error")
             break
 
+    for job_title in job_titles:
+        print(f"Testing job title: {job_title}")
+        try:
+            # Wait for the job title link to be visible
+            job_locator = page.locator(f"text={job_title}")
+            job_locator.wait_for(state="visible", timeout=5000)  # Adding timeout to avoid hanging
+            print(f"Clicking job title: {job_title}")
+            job_locator.click()  # Click on the job title link
+            random_sleep(3, 5)  # Stay on the job page for a few seconds
+            page.go_back()  # Go back to the search results page
+            random_sleep(3, 4)  # Wait before clicking the next job title
+        except Exception as e:
+            print(f"Failed to test {job_title}: {str(e)}")
 
-
+    # Save the data in a styled Excel file
     df = pd.DataFrame(job_titles, columns=["Job title"])
     df.to_excel('Styled_Results.xlsx', index=False)
     style_excel('Styled_Results.xlsx', 'Styled_Results.xlsx')
     print("Scraped data saved to Styled_Results.xlsx!")
 
-browser.close()
+    browser.close()
