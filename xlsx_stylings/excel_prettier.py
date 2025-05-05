@@ -7,7 +7,7 @@ import os
 
 
 input_file = "Results.xlsx"
-output_file = "Styled_Results.xlsx"
+output_file = "results.xlsx"
 
 
 
