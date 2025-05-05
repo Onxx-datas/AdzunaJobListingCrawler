@@ -10,20 +10,29 @@ def check_proxy(proxy):
     try:
         response = requests.get(
             "http://httpbin.org/ip",
-            proxies={"http": f"http://{proxy}", "https": f"http://{proxy}"},
+            proxies={
+                "http": f"http://{proxy}",
+                "https": f"http://{proxy}"
+            },
             timeout=5
         )
         if response.status_code == 200:
-            print(f"[+] WORKING: {proxy}")
+            ip = response.json().get("origin", "")
+            print(f"[+] WORKING: {proxy} → Reported IP: {ip}")
             working_proxies.append(proxy)
         else:
-            print(f"[-] BAD: {proxy}")
-    except:
+            print(f"[-] BAD RESPONSE: {proxy}")
+    except Exception:
         print(f"[-] DEAD: {proxy}")
+
 with ThreadPoolExecutor(max_workers=50) as executor:
     executor.map(check_proxy, proxies)
+
+working_proxies = list(set(working_proxies))
+
 with open("proxy_settings/working_proxies.txt", "w") as out:
     for proxy in working_proxies:
         out.write(proxy + "\n")
 
-print(f"\nDone. {len(working_proxies)} working proxies saved.")
+print(f"\nChecked {len(proxies)} proxies.")
+print(f"{len(working_proxies)} working proxies saved to working_proxies.txt.")
