@@ -1,6 +1,5 @@
 import requests
 
-# Load working proxies
 with open("proxy_settings/working_proxies.txt") as file:
     proxies = list(set(line.strip() for line in file if line.strip()))
 
@@ -22,7 +21,6 @@ for proxy in proxies:
     except Exception as e:
         print(f"[!] Failed to check location for: {proxy} → {e}")
 
-# Save UK proxies
 with open("proxy_settings/uk_proxies.txt", "w") as out:
     for p in sorted(set(uk_proxies)):
         out.write(p + "\n")
